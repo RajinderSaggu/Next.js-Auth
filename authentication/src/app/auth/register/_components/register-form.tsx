@@ -1,5 +1,5 @@
 "use client";
-import React from 'react'
+import React, { useState, useTransition } from 'react'
 import CardWrapper from '../../../../components/ui/auth/card-wrapper';
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -17,8 +17,12 @@ import { z } from 'zod';
 import { Button } from '../../../../components/ui/button';
 import FormError from '@/components/form-error';
 import FormSuccess from '@/components/form-success';
+import { Register } from '../../../../../actions/register';
 
 const RegisterForm = () => {
+    const [error, setError] = useState<string | undefined>("");
+    const [success, setSuccess] = useState<string | undefined>("");
+    const [isPending, startTransition] = useTransition();
     const form = useForm<z.infer<typeof RegisterSchema>>({
         resolver: zodResolver(RegisterSchema),
         defaultValues: {
@@ -29,7 +33,16 @@ const RegisterForm = () => {
     })
 
     const onSubmit = (values: z.infer<typeof RegisterSchema>) => {
-        console.log(values);
+        setSuccess("");
+        setError("");
+        startTransition(() => {
+            Register(values)
+                .then((data) => {
+                    setSuccess(data.success);
+                    setError(data.errors);
+                })
+        });
+
     }
 
     return (
@@ -38,7 +51,7 @@ const RegisterForm = () => {
                 <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
                     <FormField
                         control={form.control}
-                        name="email"
+                        name="name"
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Name</FormLabel>
@@ -47,6 +60,7 @@ const RegisterForm = () => {
                                         {...field}
                                         placeholder='rajinder Saggu'
                                         type="name"
+                                        disabled={isPending}
 
                                     />
                                 </FormControl>
@@ -65,6 +79,7 @@ const RegisterForm = () => {
                                         {...field}
                                         placeholder='rajider.saggu@gmail.com'
                                         type="email"
+                                        disabled={isPending}
 
                                     />
                                 </FormControl>
@@ -85,6 +100,7 @@ const RegisterForm = () => {
                                         {...field}
                                         placeholder='************'
                                         type="password"
+                                        disabled={isPending}
 
                                     />
                                 </FormControl>
@@ -92,9 +108,9 @@ const RegisterForm = () => {
                             </FormItem>
                         )}
                     />
-                    <FormError message={"InValid Credentials !"}>
+                    <FormError message={error}>
                     </FormError>
-                    <FormSuccess message={"SuccessFully LoggedIn !"}>
+                    <FormSuccess message={success}>
                     </FormSuccess>
                     <Button variant={"default"} type='submit' className='w-full' onClick={() => { }}>Register</Button>
                 </form>
@@ -104,3 +120,5 @@ const RegisterForm = () => {
 }
 
 export default RegisterForm;
+
+
